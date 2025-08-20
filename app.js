@@ -457,7 +457,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     { role: "user", content: userContent }
                 ],
                 stream: true,
-                temperature: 0.3,
                 verbosity: "low",
                 reasoning_effort: "minimal"
             };
