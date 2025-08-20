@@ -1,64 +1,42 @@
 # Bridge(Ver.5-nano-debounce-optimized)
 
-![Bridge](images/icons/icon-192x192.png)
+![Bridge(Ver.5-nano)](images/icons/icon-192x192.png)
 
 スマートフォンやタブレット向けに最適化された、日本語と英語間のリアルタイム音声翻訳を行うプログレッシブウェブアプリケーション（PWA）です。最新のGPT-5-nanoモデルを活用した高精度・高速翻訳機能を提供します。
 
 ## デモ
 
-[ライブデモを見る](https://achirofunakoshi.github.io/Bridge-Ver.5-nano-debounce-optimized/)
+[ライブデモを見る](https://aichirofunakoshi.github.io/Bridge-Ver.5-nano-debounce-optimized/)
 
 ## 本リポジトリでの今回の変更（要約）
 
 本バージョンでは「デバウンス最適化」と「ストリーミング堅牢化」を中心に改良を行いました。主要な改善点は以下のとおりです。
 
-- **言語適応デバウンス（Adaptive Debounce）**  
-  - 日本語 / 英語の言語特性に基づいたベース値（ja: 346ms, en: 154ms）を使用し、発話中の暫定（interim）更新レートに応じて自動でデバウンス時間を短縮／延長します。  
-  - 実行時には `console.debug('[debounce] ...')` によるログを出力して、実際の発話レートに応じた待ち時間を確認できます。
+### 🚀 言語適応デバウンス（Adaptive Debounce）
+- 日本語 / 英語の言語特性に基づいたベース値（ja: 346ms, en: 154ms）を使用し、発話中の暫定（interim）更新レートに応じて自動でデバウンス時間を短縮／延長します。
+- 実行時には `console.debug('[debounce] ...')` によるログを出力して、実際の発話レートに応じた待ち時間を確認できます。
 
-- **ストリーミング（SSE）パーサの堅牢化**  
-  - OpenAI のストリーミング応答を行単位で安全にパースするため、断片(chunk)を `streamBuffer` に蓄え、行ごとに抽出して処理する方式にしました。  
-  - バッファ上限（`STREAM_BUFFER_LIMIT = 64KB`）を設け、過大データによるメモリ膨張を防止します。上限超過時は古いデータを切り詰め、Console に警告を出力します。
+### 🔧 ストリーミング（SSE）パーサの堅牢化
+- OpenAI のストリーミング応答を行単位で安全にパースするため、断片(chunk)を `streamBuffer` に蓄え、行ごとに抽出して処理する方式にしました。
+- バッファ上限を設け、過大データによるメモリ膨張を防止します。上限超過時は古いデータを切り詰め、Console に警告を出力します。
 
-- **増分翻訳（Incremental Translation）ポリシー**  
-  - 進行中の翻訳と新しい認識テキストの重なり（オーバーラップ比）が高い場合は、差分（suffix）だけをモデルに投げる試みを行い、応答時間を短縮します（閾値: 0.8）。
+### ⚡ 増分翻訳（Incremental Translation）ポリシー
+- 進行中の翻訳と新しい認識テキストの重なり（オーバーラップ比）が高い場合は、差分（suffix）だけをモデルに投げる試みを行い、応答時間を短縮します（閾値: 0.8）。
 
-- **中断（Abort）とタイマー管理の改善**  
-  - `stopRecording()` と `resetContent()` の中で `translationDebounceTimer` を `clearTimeout` しており、遅延して発火する不要な翻訳要求を防止します。
+### 🛡️ 中断（Abort）とタイマー管理の改善
+- `stopRecording()` と `resetContent()` の中で `translationDebounceTimer` を `clearTimeout` しており、遅延して発火する不要な翻訳要求を防止します。
 
-- **早期チェックと UX 改善**  
-  - `translateText()` で API キー未設定を早期に検出して処理を止め、ユーザーにエラーを表示します。  
-  - APIキー設定モーダル（`apiModal`）を開いた際に入力欄へ自動フォーカス (`openaiKeyInput.focus()`) を行うようにしました。
+### 🎯 早期チェックと UX 改善
+- `translateText()` で API キー未設定を早期に検出して処理を止め、ユーザーにエラーを表示します。
+- APIキー設定モーダル（`apiModal`）を開いた際に入力欄へ自動フォーカス (`openaiKeyInput.focus()`) を行うようにしました。
 
-- **その他の改善**  
-  - 認識オブジェクト（`recognition`）の存在チェックを強化。未初期化での開始を防止します。  
-  - 処理済みフレーズの二重送信を防ぐための `processedResultMap` によるデデュープ機構を搭載。
-
----
-
-## フォルダ構成
-
-```
-(project root)
-├─ index.html
-├─ app.js
-├─ style.css
-├─ manifest.json
-└─ images/
-   └─ icons/
-      ├─ icon-120x120.png
-      ├─ icon-152x152.png
-      ├─ icon-167x167.png
-      ├─ icon-192x192.png
-      ├─ icon-512x512.png
-      └─ apple-touch-icon-180x180.png
-```
-
----
+### 🔄 その他の改善
+- 認識オブジェクト（`recognition`）の存在チェックを強化。未初期化での開始を防止します。
+- 処理済みフレーズの二重送信を防ぐための `processedResultMap` によるデデュープ機構を搭載。
 
 ## 特徴
 
-- **GPT-5-nano搭載**: 最新のOpenAI言語モデルによる高精度翻訳
+- **GPT-5-nano搭載**: 最新のOpenAI言語モデルによる高精度・高速翻訳
 - **モバイルファーストデザイン**: スマートフォンやタブレットに完全対応
 - **リアルタイム音声翻訳**: 日本語から英語、英語から日本語への即時翻訳
 - **プログレッシブウェブアプリ（PWA）**: ホーム画面に追加してアプリのように使える
@@ -83,32 +61,59 @@
 - OpenAI APIキー（[こちらで取得](https://platform.openai.com/api-keys)）
 - 最新のモバイルブラウザ（Chrome、Safari、Edge）
 
-### 使用方法
+### インストール方法
+
+#### モバイルでPWAとしてインストール:
+
+1. Safari（iOS）またはChrome（Android）でアプリを開く
+2. iPhone/iPad: 共有ボタン → 「ホーム画面に追加」
+3. Android: メニュー → 「ホーム画面に追加」または「アプリをインストール」
+
+#### 開発用:
+
+1. このリポジトリをクローン:
+   ```bash
+   git clone https://github.com/AichiroFunakoshi/Bridge-Ver.5-nano-debounce-optimized.git
+   cd Bridge-Ver.5-nano-debounce-optimized
+   ```
+
+2. ローカルのHTTPSサーバーを起動（マイク アクセスに必要）:
+   
+   Pythonを使用:
+   ```bash
+   python3 -m http.server 8443 --ssl
+   ```
+   
+   または、VS CodeのLive Server with SSL
+
+3. モバイルブラウザでローカルサーバーのHTTPS URLを開く
+
+4. 初回使用時にOpenAI APIキーを入力
+
+### デプロイ
+
+このアプリケーションは以下の静的ホスティングサービスにデプロイできます:
+
+- GitHub Pages
+- Netlify
+- Vercel
+- Firebase Hosting
+- AWS S3
+
+以下の機能に必要なため、HTTPS対応のホスティングを使用してください:
+- マイクへのアクセス
+- PWAインストール
+- Service Worker機能
+
+## 使用方法
 
 1. 「日本語開始」ボタンをタップして日本語録音を開始
-2. 「英語開始」ボタンをタップして英語録音を開始
+2. 「English Start」ボタンをタップして英語録音を開始
 3. デバイスのマイクに向かってはっきりと話す
 4. 「原文」セクションで音声のリアルタイム文字起こしが確認できます
 5. 「翻訳」セクションで翻訳結果が表示されます
 6. 「停止」ボタンをタップして録音を終了
-7. フォントサイズボタン（小、中、大、特大）で文字サイズを調整できます
-
-## 動作確認手順（ローカル）
-
-1. プロジェクトルートに上のフォルダ構成でファイルを置く。  
-2. 簡易サーバで配信する（推奨）:
-   ```bash
-   # Python 3 の簡易HTTPサーバ例（ポート8000）
-   python3 -m http.server 8000
-   ```
-   ブラウザで `http://localhost:8000/index.html` を開く。file:// スキームでも動きますが、一部ブラウザで manifest の読み取りに制限があります。
-
-3. DevTools → Console を開き、`window.__APP_MARKER` を実行して `IMPROVED_FULL_v1` が返ることを確認。  
-4. 「APIキー設定」ボタンで OpenAI API キーを保存。未設定時はモーダルが自動で開き、入力欄にフォーカスが当たります。  
-5. マイク許可を与え、「日本語開始」または「英語開始」を押して発話を行う。  
-6. Console で次のログを確認：
-   - `"[debounce] language=... rate=... wait=..."` — デバウンスタイミングの可視化  
-   - `streamBuffer exceeded limit, trimming older data` — ストリームバッファがトリミングされた場合の警告（通常は出ない想定）
+7. フォントサイズボタン（A-, A, A+, A++）で文字サイズを調整できます
 
 ## モバイル専用機能
 
@@ -134,11 +139,30 @@
 - 日本語-英語言語ペアのみ対応
 - API利用料金は使用量に応じて発生
 
+## カスタマイズ
+
+モバイル体験をカスタマイズするには:
+
+1. **外観**: `style.css`でCSSスタイルを修正
+2. **タッチターゲット**: モバイルメディアクエリでボタンサイズを調整
+3. **フォントサイズ**: 読み込み頻度に応じてフォントサイズクラスを修正
+4. **PWA設定**: `manifest.json`でアプリのメタデータを更新
+
 ## 開発者向けメモ
 
-- SSE フォーマットが将来変わるとパーサ修正が必要です。`translateText()` のパーサロジックは行ベースの `data: ...` を期待しています。  
-- 増分翻訳は「末尾の追加分」をモデルに投げる簡易方式です。文脈の大幅な変化がある場合は完全再翻訳が必要になります。  
+- SSE フォーマットが将来変わるとパーサ修正が必要です。`translateText()` のパーサロジックは行ベースの `data: ...` を期待しています。
+- 増分翻訳は「末尾の追加分」をモデルに投げる簡易方式です。文脈の大幅な変化がある場合は完全再翻訳が必要になります。
 - デバウンスのパラメータ（`OPTIMAL_DEBOUNCE`）や増分閾値（0.8）は運用でチューニング可能です。使用ログを取り、現場データに基づく再学習（チューニング）を将来的に実装する予定です。
+
+## 貢献
+
+プロジェクトへの貢献を歓迎します！プルリクエストはお気軽にお送りください。
+
+1. リポジトリをフォーク
+2. フィーチャーブランチを作成 (`git checkout -b feature/amazing-feature`)
+3. 変更をコミット (`git commit -m 'すごい機能を追加'`)
+4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
+5. プルリクエストを開く
 
 ## ライセンス
 
@@ -149,6 +173,7 @@
 - 翻訳APIを提供するOpenAI
 - GPT-5-nanoモデルの使用許可
 - ブラウザベース音声認識を可能にするWeb Speech API
+- オリジナルのリアルタイム音声翻訳アプリプロジェクトチーム
 
 ## トラブルシューティング
 
