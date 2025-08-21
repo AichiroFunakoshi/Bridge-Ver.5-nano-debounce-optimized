@@ -1,8 +1,8 @@
-// app.js - 完全改良版（デバウンス最適化・ストリーミング堅牢化・安全性向上）
+// app.js - 完全改良版（デバウンス最適化・ストリーミング堅牢化・安全性向上・思考出力エラー修正）
 // NOTE: This file was produced by the assistant. Verify OPENAI_API_KEY is set before usage.
 
 document.addEventListener('DOMContentLoaded', function() {
-    const MARKER = "IMPROVED_FULL_v1";
+    const MARKER = "IMPROVED_FULL_v2_NO_REASONING";
     // デフォルトAPIキー
     const DEFAULT_OPENAI_API_KEY = '';
     let OPENAI_API_KEY = '';
@@ -80,6 +80,64 @@ document.addEventListener('DOMContentLoaded', function() {
             return t;
         }
     };
+
+    // 翻訳出力フィルタリング関数（内的思考を削除）
+    function filterTranslationOutput(text) {
+        if (!text) return text;
+        
+        // 思考プロセスの典型的パターンを除去
+        let filtered = text;
+        
+        // 思考タグや思考を示すマーカーを除去
+        filtered = filtered.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
+        filtered = filtered.replace(/思考：[\s\S]*?(?=\n|$)/gi, '');
+        filtered = filtered.replace(/内的思考：[\s\S]*?(?=\n|$)/gi, '');
+        filtered = filtered.replace(/考え：[\s\S]*?(?=\n|$)/gi, '');
+        
+        // 推論プロセスを示すフレーズを除去
+        filtered = filtered.replace(/まず.*?を考え.*?(?=\n|$)/gi, '');
+        filtered = filtered.replace(/.*?を踏まえ.*?(?=\n|$)/gi, '');
+        filtered = filtered.replace(/.*?と考えら.*?(?=\n|$)/gi, '');
+        filtered = filtered.replace(/.*?と判断.*?(?=\n|$)/gi, '');
+        
+        // 説明的な前置きを除去
+        filtered = filtered.replace(/^.*?翻訳すると[：:]\s*/gi, '');
+        filtered = filtered.replace(/^.*?翻訳は[：:]\s*/gi, '');
+        filtered = filtered.replace(/^.*?は以下の通りです[：:]\s*/gi, '');
+        
+        // 複数行にわたる説明を除去
+        const lines = filtered.split('\n');
+        const cleanLines = lines.filter(line => {
+            const trimmed = line.trim();
+            // 空行は残す
+            if (!trimmed) return true;
+            // 明らかに説明的な行を除去
+            if (trimmed.includes('分析') || 
+                trimmed.includes('検討') || 
+                trimmed.includes('判断') ||
+                trimmed.includes('考慮') ||
+                trimmed.includes('理由') ||
+                trimmed.startsWith('なぜなら') ||
+                trimmed.startsWith('これは')) {
+                return false;
+            }
+            return true;
+        });
+        
+        filtered = cleanLines.join('\n').trim();
+        
+        // 最終的に翻訳結果のみを抽出
+        const translationMarkers = ['翻訳:', '訳:', 'Translation:', 'English:', '英語:', '日本語:'];
+        for (const marker of translationMarkers) {
+            const index = filtered.indexOf(marker);
+            if (index !== -1) {
+                filtered = filtered.substring(index + marker.length).trim();
+                break;
+            }
+        }
+        
+        return filtered.trim();
+    }
 
     // Utilities
     function hashString(str) {
@@ -190,14 +248,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function initializeApp() {
         errorMessage.textContent = '';
-        window.SYSTEM_PROMPT = `あなたは日本語と英語の専門的な同時通訳者です。
-音声入力データを以下のルールに従って読みやすいテキストに変換して翻訳してください：
-1. 元のテキストが日本語の場合は英語に翻訳する。
-2. 元のテキストが英語の場合は日本語に翻訳する。
-3. フィラー（えー、うー等）を削除。
-4. 不足情報は文脈で補完するが過度の推測は避ける。
-5. 専門用語・固有名詞は正確に保持する。
-6. 出力は翻訳のみ、説明は含めない。`;
+        // 更に強化したシステムプロンプト
+        window.SYSTEM_PROMPT = `あなたは専門的な同時通訳機です。与えられたテキストの翻訳のみを出力してください。
+
+【絶対的なルール】
+1. 翻訳結果のみを出力する
+2. 思考プロセス、説明、解釈を一切含めない
+3. 「翻訳：」「訳：」などの前置きも不要
+4. 日本語→英語、英語→日本語のみ
+5. フィラー（えー、うー等）を削除
+6. 不自然な部分は自然に補完
+
+【出力形式】
+- 翻訳結果のテキストのみ
+- 他の内容は絶対に含めない
+
+【例】
+入力：「今日はいい天気ですね」
+出力：It's nice weather today.
+
+入力：「Thank you very much」
+出力：ありがとうございます。`;
 
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             setupSpeechRecognition();
@@ -445,20 +516,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const signal = currentTranslationController.signal;
 
         try {
-            let userContent = `以下の${src}テキストを翻訳してください:\n\n${text}`;
+            // より明確なプロンプト
+            let userContent = `${text}`;
             if (options.incremental && options.suffix) {
-                userContent = `これは部分更新です。既に表示されている翻訳を踏まえて、次の追加部分を翻訳してください（元テキストの末尾を補完するように）:\n\n追加部分:${options.suffix}\n\n全文（参考）:${text}`;
+                userContent = `${text}`;
             }
 
             const payload = {
-                model: "gpt-5-nano",
+                model: "gpt-4.1-nano", // より安定したモデルに変更
                 messages: [
                     { role: "system", content: window.SYSTEM_PROMPT },
                     { role: "user", content: userContent }
                 ],
                 stream: true,
-                verbosity: "low",
-                reasoning_effort: "minimal"
+                temperature: 0.1, // より低い温度で安定した出力
+                max_tokens: 500 // 出力を制限
             };
 
             const res = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -501,19 +573,19 @@ document.addEventListener('DOMContentLoaded', function() {
                             const delta = data.choices?.[0]?.delta?.content;
                             if (delta) {
                                 accum += delta;
-                                translatedText.textContent = accum;
+                                // フィルタリングを適用して表示
+                                const filtered = filterTranslationOutput(accum);
+                                translatedText.textContent = filtered;
                             }
                         } catch (e) {
-                            accum += payloadLine;
-                            translatedText.textContent = accum;
+                            // パースエラーの場合はそのまま追加しない
+                            console.warn('SSE parse error:', e);
                         }
-                    } else {
-                        accum += line;
-                        translatedText.textContent = accum;
                     }
                 }
             }
 
+            // 残りのバッファを処理
             if (streamBuffer.trim()) {
                 const rest = streamBuffer.trim();
                 if (rest.startsWith('data: ')) {
@@ -524,19 +596,19 @@ document.addEventListener('DOMContentLoaded', function() {
                             const delta = data.choices?.[0]?.delta?.content;
                             if (delta) {
                                 accum += delta;
-                                translatedText.textContent = accum;
+                                const filtered = filterTranslationOutput(accum);
+                                translatedText.textContent = filtered;
                             }
                         } catch (e) {
-                            accum += rest;
-                            translatedText.textContent = accum;
+                            console.warn('Final SSE parse error:', e);
                         }
                     }
-                } else {
-                    accum += rest;
-                    translatedText.textContent = accum;
                 }
-                streamBuffer = '';
             }
+
+            // 最終フィルタリング
+            const finalFiltered = filterTranslationOutput(accum);
+            translatedText.textContent = finalFiltered;
 
             currentTranslationController = null;
         } catch (err) {
