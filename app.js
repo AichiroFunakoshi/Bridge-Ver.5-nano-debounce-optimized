@@ -183,8 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
             input: text,
             stream: true,
             text: { verbosity: "low" },
-            reasoning: { effort: "minimal" },
-            temperature: 0.0
+            reasoning: { effort: "minimal" },            
         };
     }
 
