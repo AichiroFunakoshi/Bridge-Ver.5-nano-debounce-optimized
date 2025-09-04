@@ -1,0 +1,127 @@
+/* Bridge Ver.5-nano — White UI (Ver.4.1準拠・洗練レイアウト)
+   - 白背景/黒文字の読みやすい配色
+   - コントロールは segmented（開始/停止/リセット）
+   - フォントサイズは chip で切替（A-, A, A+, A++）
+   - 入力/翻訳はカード+余白広め、モバイルは1カラム
+   - 既存 app.js の ID/クラス互換: result-content / size-* / modal / #listeningIndicator / #translatingIndicator など
+*/
+
+:root{
+  --bg:#ffffff;            /* ページ背景 */
+  --surface:#ffffff;       /* カード/ボタン背景 */
+  --surface-alt:#fafafa;   /* 結果ペイン背景 */
+  --text:#111111;          /* 主要テキスト */
+  --muted:#667085;         /* 補助テキスト */
+  --border:#e5e7eb;        /* 枠線 */
+  --primary:#1a73e8;       /* 主要アクセント */
+  --primary-ink:#ffffff;   /* 主要アクセント上の文字色 */
+  --badge:#eef2ff;         /* バッジ背景 */
+  --badge-ink:#344ae0;     /* バッジ文字色 */
+  --danger:#b42318;        /* エラー色 */
+}
+
+/* Base */
+html,body{height:100%;margin:0}
+body{
+  font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  background:var(--bg); color:var(--text);
+}
+
+/* App Bar */
+.app-bar{display:flex;justify-content:space-between;align-items:flex-start;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--surface)}
+.app-title{margin:0;font-size:20px;font-weight:700}
+.app-subtitle{margin:4px 0 0;color:var(--muted);font-size:13px}
+
+/* Layout */
+.container{max-width:980px;margin:0 auto;padding:16px 20px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px}
+
+/* Controls */
+.controls__rows{display:flex;flex-direction:column;gap:10px}
+.controls__row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+.segmented{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.segmented__item{padding:10px 12px;background:var(--surface);border-right:1px solid var(--border);cursor:pointer;user-select:none}
+.segmented__item:last-child{border-right:none}
+.segmented__item:hover{background:#f7f7f7}
+.segmented__item--danger{color:var(--danger)}
+
+.font-controls{display:flex;gap:8px;align-items:center}
+.chip{padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:var(--surface);cursor:pointer;user-select:none}
+.chip--active{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+
+/* Status & Indicators */
+.status{font-size:13px;color:var(--muted)}
+.badges{display:flex;gap:8px}
+.badge{background:var(--badge);color:var(--badge-ink);padding:4px 8px;border-radius:999px;font-size:12px;display:none}
+.badge.visible{display:inline-block}
+/* app.js は #listeningIndicator / #translatingIndicator に .visible を付与する */
+#listeningIndicator.visible{background:var(--badge);color:var(--badge-ink)}
+#translatingIndicator.visible{background:#e8f0fe;color:#1a73e8}
+
+.error{color:var(--danger);font-size:13px;margin-top:4px}
+
+/* Grid & Cards */
+.grid{display:grid}
+.grid--2col{grid-template-columns:1fr 1fr}
+.gap{gap:16px}
+@media (max-width: 800px){.grid--2col{grid-template-columns:1fr}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px}
+.card__header{margin-bottom:8px}
+.card__title{margin:0;font-size:14px;color:var(--muted)}
+.lang-indicator{font-weight:600;color:var(--text)}
+
+/* Results */
+.result, .result-content{
+  min-height:180px;white-space:pre-wrap;line-height:1.7;background:var(--surface-alt);
+  border:1px solid var(--border);border-radius:10px;padding:12px;
+}
+.result-content.updating{opacity:.7;transform:translateY(-1px);transition:opacity .15s ease, transform .15s ease}
+
+/* Font sizes (app.js が size-* を付け替え) */
+.size-small  { font-size:16px }
+.size-medium { font-size:20px }
+.size-large  { font-size:26px }
+.size-xlarge { font-size:34px }
+
+/* Buttons (汎用) */
+.btn{border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:8px 10px;cursor:pointer}
+.btn-ghost{border:none;background:transparent}
+.btn-primary{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.link{color:var(--primary);background:transparent;border:none;cursor:pointer}
+
+/* Modal (互換: 旧 .modal .box / 新 .modal__box の両方に適用) */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(17,24,39,.36)}
+.modal .box, .modal__box{background:var(--surface);border-radius:12px;padding:16px;width:min(520px, 92vw)}
+.modal__title{margin:0 0 6px;font-size:18px}
+.modal__desc{margin:0 0 10px;color:var(--muted)}
+.label{display:block;margin:8px 0 6px;font-size:13px;color:#475467}
+.modal__actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.input{border:1px solid var(--border);border-radius:10px;padding:10px 12px;width:100%}
+
+/* Footer */
+.footer{max-width:980px;margin:16px auto 24px;padding:0 20px;color:var(--muted);display:flex;align-items:center;gap:14px}
+
+/* 互換: 旧クラス名を最小限残す（今後HTMLを白UI構造へ移行しても安全） */
+.app{max-width:980px;margin:28px auto;padding:20px}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.controls{display:flex;gap:8px;align-items:center}
+.button{background:var(--surface);border-radius:10px;padding:10px 12px;color:var(--text);border:1px solid var(--border);cursor:pointer}
+.language-button{background:var(--surface);padding:8px 12px;border-radius:8px}
+.status.idle{color:var(--muted)}
+.container{display:block}
+.card h3{margin:0 0 8px 0;font-size:14px;color:var(--muted)}
+.indicator{display:none}
+.listening-indicator.visible{display:inline-block}
+.translating-indicator.visible{display:inline-block}
+
+/* Responsive tweaks */
+@media (max-width:640px){
+  .app-bar{padding:12px 16px}
+  .container{padding:12px 16px}
+  .panel{padding:10px}
+  .segmented__item{padding:9px 10px}
+  .chip{padding:5px 9px}
+  .result, .result-content{padding:10px}
+}

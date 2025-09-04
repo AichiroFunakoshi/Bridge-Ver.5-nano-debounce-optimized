@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bridge (Ver.5-nano)</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="images/icons/apple-touch-icon-180x180.png" />
+  <link rel="icon" type="image/png" sizes="120x120" href="images/icons/icon-120x120.png" />
+  <link rel="icon" type="image/png" sizes="152x152" href="images/icons/icon-152x152.png" />
+  <link rel="icon" type="image/png" sizes="167x167" href="images/icons/icon-167x167.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="images/icons/icon-192x192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="images/icons/icon-512x512.png" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-white">
+
+  <!-- ヘッダー（白背景UI） -->
+  <header class="app-bar">
+    <div class="app-bar__left">
+      <h1 class="app-title">Bridge (Ver.5-nano)</h1>
+      <p class="app-subtitle">日本語⇄英語 リアルタイム音声翻訳（GPT-5-nano）</p>
+    </div>
+    <div class="app-bar__right">
+      <button id="settingsButton" class="btn btn-ghost" aria-label="APIキー設定">⚙</button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- コントロール（segmented + chips） -->
+    <section class="panel panel--controls">
+      <div class="controls__rows">
+
+        <div class="controls__row">
+          <div class="segmented" role="group" aria-label="操作">
+            <button id="startJapaneseBtn" class="segmented__item" aria-label="日本語から開始">日本語開始</button>
+            <button id="startEnglishBtn" class="segmented__item" aria-label="英語から開始">英語開始</button>
+            <button id="stopBtn" class="segmented__item segmented__item--danger" disabled>
+              <span id="stopBtnText">停止</span>
+            </button>
+            <button id="resetBtn" class="segmented__item" aria-label="リセット">リセット</button>
+          </div>
+
+          <div class="font-controls" role="group" aria-label="文字サイズ">
+            <button id="fontSizeSmall"  class="chip" title="小">A-</button>
+            <button id="fontSizeMedium" class="chip chip--active" title="中">A</button>
+            <button id="fontSizeLarge"  class="chip" title="大">A+</button>
+            <button id="fontSizeXLarge" class="chip" title="特大">A++</button>
+          </div>
+        </div>
+
+        <div class="controls__row">
+          <div class="status" id="status" aria-live="polite">待機中</div>
+          <div class="badges">
+            <span id="listeningIndicator"   class="badge" aria-hidden="true">🎙️ 聞き取り中</span>
+            <span id="translatingIndicator" class="badge" aria-hidden="true">⚡ 翻訳中</span>
+          </div>
+        </div>
+
+        <div id="errorMessage" class="error" role="alert"></div>
+      </div>
+    </section>
+
+    <!-- 結果表示（2カラム→モバイル1カラム） -->
+    <section class="grid grid--2col gap">
+      <article class="card">
+        <header class="card__header">
+          <h2 class="card__title">原文 <small id="sourceLanguage" class="lang-indicator">—</small></h2>
+        </header>
+        <div id="originalText" class="result-content size-medium" aria-live="polite"></div>
+      </article>
+
+      <article class="card">
+        <header class="card__header">
+          <h2 class="card__title">翻訳 <small id="targetLanguage" class="lang-indicator">—</small></h2>
+        </header>
+        <div id="translatedText" class="result-content size-medium" aria-live="polite"></div>
+      </article>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <small>© 2025 Bridge — Ver.5-nano（白背景UI）</small>
+    <button id="resetKeys" class="link">APIキーをリセット</button>
+  </footer>
+
+  <!-- APIキー設定モーダル（modal__box へ変更） -->
+  <div id="apiModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal__box">
+      <h3 class="modal__title">APIキー設定</h3>
+      <p class="modal__desc">翻訳アプリを使用するには OpenAI API キーを入力してください。キーはブラウザのローカルに保存されます。</p>
+
+      <label for="openaiKey" class="label">OpenAI API Key</label>
+      <input id="openaiKey" type="text" class="input" placeholder="sk-..." inputmode="latin" autocomplete="off" />
+
+      <div class="modal__actions">
+        <button id="saveApiKeys" class="btn btn-primary">保存して開始</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
